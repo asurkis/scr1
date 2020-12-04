@@ -107,6 +107,8 @@
         .balign  64;                                                    \
         .weak stvec_handler;                                            \
         .weak mtvec_handler;                                            \
+        .org 0x740, 0;                                                  \
+        .balign 64;                                                     \
 trap_vector:                                                            \
         /* test whether the test came from pass/fail */                 \
         csrr a4, mcause;                                                \
@@ -115,7 +117,7 @@ trap_vector:                                                            \
         li a5, CAUSE_SUPERVISOR_ECALL;                                  \
         beq a4, a5, _report;                                            \
         li a5, CAUSE_MACHINE_ECALL;                                     \
-        beq a4, a5, _report;                                            \
+        beq a4, a5, _handle_machine_ecall;                              \
         /* if an mtvec_handler is defined, jump to it */                \
         la a4, mtvec_handler;                                           \
         beqz a4, 1f;                                                    \
@@ -129,8 +131,11 @@ handle_exception:                                                       \
 other_exception:                                                        \
         /* some unhandlable exception occurred */                       \
         li   a0, 0x1;                                                   \
+_handle_machine_ecall:                                                  \
+        nop; nop; nop; \
 _report:                                                                \
         j sc_exit;                                                      \
+        .org 0xD20, 0;                                                  \
         .balign  64;                                                    \
         .globl _start;                                                  \
 _start:                                                                 \
@@ -193,7 +198,10 @@ _run_test:
 // Data Section Macro
 //-----------------------------------------------------------------------
 
-#define EXTRA_DATA
+#define EXTRA_DATA \
+  .section .data; \
+  .balign 64; \
+  variant_string: .string "qwer";
 
 #define RVTEST_DATA_BEGIN                                                       \
         EXTRA_DATA                                                              \
@@ -208,9 +216,9 @@ _run_test:
 
 #define RVTEST_DATA_END .balign 16; .global end_signature; end_signature:
 
-#-----------------------------------------------------------------------
-# Helper macros
-#-----------------------------------------------------------------------
+// #-----------------------------------------------------------------------
+// # Helper macros
+// #-----------------------------------------------------------------------
 
 #define MASK_XLEN(x) ((x) & ((1 << (__riscv_xlen - 1) << 1) - 1))
 
@@ -221,8 +229,8 @@ test_ ## testnum: \
     li  TESTNUM, testnum; \
     bne testreg, x29, fail;
 
-# We use a macro hack to simpify code generation for various numbers
-# of bubble cycles.
+// # We use a macro hack to simpify code generation for various numbers
+// # of bubble cycles.
 
 #define TEST_INSERT_NOPS_0
 #define TEST_INSERT_NOPS_1  nop; TEST_INSERT_NOPS_0
@@ -237,13 +245,13 @@ test_ ## testnum: \
 #define TEST_INSERT_NOPS_10 nop; TEST_INSERT_NOPS_9
 
 
-#-----------------------------------------------------------------------
-# RV64UI MACROS
-#-----------------------------------------------------------------------
+// #-----------------------------------------------------------------------
+// # RV64UI MACROS
+// #-----------------------------------------------------------------------
 
-#-----------------------------------------------------------------------
-# Tests for instructions with immediate operand
-#-----------------------------------------------------------------------
+// #-----------------------------------------------------------------------
+// # Tests for instructions with immediate operand
+// #-----------------------------------------------------------------------
 
 #define SEXT_IMM(x) ((x) | (-(((x) >> 11) & 1) << 11))
 
@@ -299,9 +307,9 @@ test_ ## testnum: \
       inst x0, x1, SEXT_IMM(imm); \
     )
 
-#-----------------------------------------------------------------------
-# Tests for vector config instructions
-#-----------------------------------------------------------------------
+// #-----------------------------------------------------------------------
+// # Tests for vector config instructions
+// #-----------------------------------------------------------------------
 
 #define TEST_VSETCFGIVL( testnum, nxpr, nfpr, bank, vl, result ) \
     TEST_CASE( testnum, x1, result, \
@@ -327,9 +335,9 @@ test_ ## testnum: \
       vsetvl x1, x1; \
     )
 
-#-----------------------------------------------------------------------
-# Tests for an instruction with register operands
-#-----------------------------------------------------------------------
+// #-----------------------------------------------------------------------
+// # Tests for an instruction with register operands
+// #-----------------------------------------------------------------------
 
 #define TEST_R_OP( testnum, inst, result, val1 ) \
     TEST_CASE( testnum, x3, result, \
@@ -355,9 +363,9 @@ test_ ## testnum: \
       bne x4, x5, 1b \
     )
 
-#-----------------------------------------------------------------------
-# Tests for an instruction with register-register operands
-#-----------------------------------------------------------------------
+// #-----------------------------------------------------------------------
+// # Tests for an instruction with register-register operands
+// #-----------------------------------------------------------------------
 
 #define TEST_RR_OP( testnum, inst, result, val1, val2 ) \
     TEST_CASE( testnum, x3, result, \
@@ -449,9 +457,9 @@ test_ ## testnum: \
       inst x0, x1, x2; \
     )
 
-#-----------------------------------------------------------------------
-# Test memory instructions
-#-----------------------------------------------------------------------
+// #-----------------------------------------------------------------------
+// # Test memory instructions
+// #-----------------------------------------------------------------------
 
 #define TEST_LD_OP( testnum, inst, result, offset, base ) \
     TEST_CASE( testnum, x3, result, \
@@ -526,9 +534,9 @@ test_ ## testnum: \
     li  x5, 2; \
     bne x4, x5, 1b \
 
-#-----------------------------------------------------------------------
-# Test branch instructions
-#-----------------------------------------------------------------------
+// #-----------------------------------------------------------------------
+// # Test branch instructions
+// #-----------------------------------------------------------------------
 
 #define TEST_BR1_OP_TAKEN( testnum, inst, val1 ) \
 test_ ## testnum: \
@@ -611,9 +619,9 @@ test_ ## testnum: \
     li  x5, 2; \
     bne x4, x5, 1b \
 
-#-----------------------------------------------------------------------
-# Test jump instructions
-#-----------------------------------------------------------------------
+// #-----------------------------------------------------------------------
+// # Test jump instructions
+// #-----------------------------------------------------------------------
 
 #define TEST_JR_SRC1_BYPASS( testnum, nop_cycles, inst ) \
 test_ ## testnum: \
@@ -640,13 +648,13 @@ test_ ## testnum: \
     bne x4, x5, 1b \
 
 
-#-----------------------------------------------------------------------
-# RV64UF MACROS
-#-----------------------------------------------------------------------
+// #-----------------------------------------------------------------------
+// # RV64UF MACROS
+// #-----------------------------------------------------------------------
 
-#-----------------------------------------------------------------------
-# Tests floating-point instructions
-#-----------------------------------------------------------------------
+// #-----------------------------------------------------------------------
+// # Tests floating-point instructions
+// #-----------------------------------------------------------------------
 
 #define qNaNf 0f:7fc00000
 #define sNaNf 0f:7f800001
@@ -797,9 +805,9 @@ test_ ## testnum: \
   .double result; \
 1:
 
-#-----------------------------------------------------------------------
-# Pass and fail code (assumes test num is in TESTNUM)
-#-----------------------------------------------------------------------
+// #-----------------------------------------------------------------------
+// # Pass and fail code (assumes test num is in TESTNUM)
+// #-----------------------------------------------------------------------
 
 #define TEST_PASSFAIL \
         bne x0, TESTNUM, pass; \
@@ -809,11 +817,10 @@ pass: \
         RVTEST_PASS \
 
 
-#-----------------------------------------------------------------------
-# Test data section
-#-----------------------------------------------------------------------
+// #-----------------------------------------------------------------------
+// # Test data section
+// #-----------------------------------------------------------------------
 
 #define TEST_DATA
 
 #endif
-
