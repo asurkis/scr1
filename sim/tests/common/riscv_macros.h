@@ -126,21 +126,21 @@ trap_vector:                                                            \
 1:      csrr a4, mcause;                                                \
         bgez a4, handle_exception;                                      \
         INTERRUPT_HANDLER;                                              \
+_handle_machine_ecall:                                                  \
+        la t0, variant_string;                                          \
+        la t1, 0xF0000000;                                              \
+        addi t2, x0, 0;                                                 \
+1:      lb t2, 0(t0);                                                   \
+        beq t2, x0, 2f;                                                 \
+        sb t2, 0(t1);                                                   \
+        addi t0, t0, 1;                                                 \
+        j 1b;                                                           \
+2:      j _report;                                                      \
 handle_exception:                                                       \
         /* we don't know how to handle whatever the exception was */    \
 other_exception:                                                        \
         /* some unhandlable exception occurred */                       \
         li   a0, 0x1;                                                   \
-_handle_machine_ecall:                                                  \
-        la t0, variant_string; \
-        la t1, 0xF0000000; \
-        addi t2, x0, 0; \
-1:      lb t2, 0(t0); \
-        beq t2, x0, 2f; \
-        sb t2, 0(t1); \
-        addi t0, t0, 1; \
-        j 1b; \
-2:      \
 _report:                                                                \
         j sc_exit;                                                      \
         .org 0xD20, 0;                                                  \
@@ -206,10 +206,10 @@ _run_test:
 // Data Section Macro
 //-----------------------------------------------------------------------
 
-#define EXTRA_DATA \
-  .section .data; \
-  .balign 64; \
-  variant_string: .string "ecall";
+#define EXTRA_DATA                   \
+  .section .data;                    \
+  .balign 64;                        \
+  variant_string: .string "ecall\n";
 
 #define RVTEST_DATA_BEGIN                                                       \
         EXTRA_DATA                                                              \
