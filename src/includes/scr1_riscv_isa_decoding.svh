@@ -33,7 +33,8 @@ typedef enum logic [6:2] {
     SCR1_OPCODE_BRANCH      = 5'b11000,
     SCR1_OPCODE_JALR        = 5'b11001,
     SCR1_OPCODE_JAL         = 5'b11011,
-    SCR1_OPCODE_SYSTEM      = 5'b11100
+    SCR1_OPCODE_SYSTEM      = 5'b11100,
+    SCR1X_OPCODE_OP_IMM     = 5'b00010
 } type_scr1_rvi_opcode_e;
 
 
@@ -51,9 +52,9 @@ typedef enum logic [SCR1_IALU_OP_WIDTH_E-1:0] {
 // IALU main commands
 //-------------------------------------------------------------------------------
 `ifdef SCR1_RVM_EXT
-localparam SCR1_IALU_CMD_ALL_NUM_E    = 23;
+localparam SCR1_IALU_CMD_ALL_NUM_E    = 24;
 `else // ~SCR1_RVM_EXT
-localparam SCR1_IALU_CMD_ALL_NUM_E    = 15;
+localparam SCR1_IALU_CMD_ALL_NUM_E    = 16;
 `endif // ~SCR1_RVM_EXT
 localparam SCR1_IALU_CMD_WIDTH_E      = $clog2(SCR1_IALU_CMD_ALL_NUM_E);
 typedef enum logic [SCR1_IALU_CMD_WIDTH_E-1:0] {
@@ -83,6 +84,8 @@ typedef enum logic [SCR1_IALU_CMD_WIDTH_E-1:0] {
     SCR1_IALU_CMD_REM,          // op1 % op2
     SCR1_IALU_CMD_REMU          // op1 u% op2
 `endif  // SCR1_RVM_EXT
+    ,
+    SCR1X_IALU_CMD_CAT
 } type_scr1_ialu_cmd_sel_e;
 
 //-------------------------------------------------------------------------------
@@ -179,4 +182,3 @@ typedef struct packed {
 } type_scr1_exu_cmd_s;
 
 `endif // SCR1_RISCV_ISA_DECODING_SVH
-

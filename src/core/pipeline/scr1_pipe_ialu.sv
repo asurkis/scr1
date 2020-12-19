@@ -649,6 +649,10 @@ always_comb begin
             endcase
         end
 `endif // SCR1_RVM_EXT
+        SCR1X_IALU_CMD_CAT: begin
+            ialu2exu_main_res_o[31:12] = exu2ialu_main_op1_i[31:12];
+            ialu2exu_main_res_o[11:0] = exu2ialu_main_op2_i[11:0];
+        end
         default : begin end
     endcase
 end

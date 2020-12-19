@@ -65,3 +65,52 @@
     тест `MyTest`.
 1. Заменил `li x3, 42` на `li x3, 43` в `MyTest.S` и убедился, что тест не проходит.
     В дальнейшем этот тест будет заменен на тест синтезируемой команды.
+1. Решил использовать вид кодирования "I" (I-type),
+    поскольку моя инструкция принимает регистр и младшие 12 бит константы на вход
+    и регистр на выход.
+    Аналогичные виды кодирования используют инструкции по типу `addi`,
+    но добавить свою инструкцию в тот же `opcode` не получилось,
+    т.к. все возможные значения `funct3` на `opcode = 0010011` уже распределены.
+    Поэтому нужно выделить новый `opcode`.
+1. Нашел неиспользуемый в RISC-V `opcode` 0001011.
+    Последние два бита отвечают за тип машинной команды,
+    а именно &mdash; 32-битная инструкция (RVI),
+    остальные можно перебирать, что я и сделал.
+1. Заменил строку 36 на строки 36-37 в файле `src/core/includes/scr1_riscv_isa_decoding.svh`:
+
+        SCR1_OPCODE_SYSTEM  = 5'b11100,
+        SCR1X_OPCODE_OP_IMM = 5'b00010
+1. Добавил строки 87-88 в файле `src/core/includes/scr1_riscv_isa_decoding.svh`:
+
+        ,
+        SCR1X_IALU_CMD_CAT
+1. Изменил строки 55 и 57 в файле `src/core/includes/scr1_riscv_isa_decoding.svh`:
+
+        `ifdef SCR1_RVM_EXT
+        localparam SCR1_IALU_CMD_ALL_NUM_E    = 24;
+        `else // ~SCR1_RVM_EXT
+        localparam SCR1_IALU_CMD_ALL_NUM_E    = 16;
+1. Добавил строки 466-479 в файле `src/core/pipeline/scr_pipe_idu.sv`
+
+        SCR1X_OPCODE_OP_IMM: begin
+            idu2exu_use_rs1_o         = 1'b1;
+            idu2exu_use_rd_o          = 1'b1;
+            idu2exu_use_imm_o         = 1'b1;
+            idu2exu_cmd_o.imm         = {{20{0}}, instr[31:20]};
+            idu2exu_cmd_o.ialu_op     = SCR1_IALU_OP_REG_IMM;
+            idu2exu_cmd_o.rd_wb_sel   = SCR1_RD_WB_IALU;
+
+            case (funct3)
+                3'b000: idu2exu_cmd_o.ialu_cmd = SCR1X_IALU_CMD_CAT;
+                default: rvi_illegal = 1'b1;
+            endcase // funct3
+        end // SCR1X_OPCODE_OP_IMM
+
+    Этот код, по аналогии с обработчиком `SCR1_OPCODE_OP_IMM`,
+    декодирует команду как использующую один исходный регистр,
+    один регистр для вывода, константу,
+    задает младшие 12 бит константы как старшие 12 бит инструкции,
+    старшие 20 бит константы заполняет нулями,
+    режим ввода АЛУ как "регистр-константа",
+    решим вывода АЛУ как "writeback" (запись в регистр после выполнения),
+    операция в АЛУ &mdash; объявленная операция конкатенации

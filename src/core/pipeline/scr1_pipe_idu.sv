@@ -463,6 +463,20 @@ always_comb begin
                     default : begin
                         rvi_illegal = 1'b1;
                     end
+
+                    SCR1X_OPCODE_OP_IMM: begin
+                        idu2exu_use_rs1_o         = 1'b1;
+                        idu2exu_use_rd_o          = 1'b1;
+                        idu2exu_use_imm_o         = 1'b1;
+                        idu2exu_cmd_o.imm         = {{20{0}}, instr[31:20]};
+                        idu2exu_cmd_o.ialu_op     = SCR1_IALU_OP_REG_IMM;
+                        idu2exu_cmd_o.rd_wb_sel   = SCR1_RD_WB_IALU;
+
+                        case (funct3)
+                            3'b000: idu2exu_cmd_o.ialu_cmd = SCR1X_IALU_CMD_CAT;
+                            default: rvi_illegal = 1'b1;
+                        endcase // funct3
+                    end // SCR1X_OPCODE_OP_IMM
                 endcase // rvi_opcode
             end // SCR1_INSTR_RVI
 
