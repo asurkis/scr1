@@ -42,7 +42,7 @@
                 addi    t1, t1, 1
                 la t0, result
                 sw      t1, 0(t0)
-                li      t3, 43
+                li      t3, 42
                 bne     t1, t3, fail
                 RVTEST_PASS
         fail:
@@ -61,7 +61,7 @@
         RVTEST_DATA_END
 
 1. Добавил строку 68: `rv32_isa_tests = MyTest.S` к `sim/tests/riscv_isa/rv32_tests.inc`.
-1. Запустил `make clean; make TARGETS=riscv_isa TRACE=1`, чтобы убедиться, что успешно проходит
+1. Запустил `make clean; make TARGETS=riscv_isa`, чтобы убедиться, что успешно проходит
     тест `MyTest`.
 1. Заменил `li x3, 42` на `li x3, 43` в `MyTest.S` и убедился, что тест не проходит.
     В дальнейшем этот тест будет заменен на тест синтезируемой команды.
