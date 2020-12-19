@@ -206,6 +206,8 @@
     `exu2ialu_main_op2_i` &mdash; в `imm`.
     На этом же такте `ialu2exu_main_res_o` устанавливается в результат конкатенации
     и записывается в регистр `rd`.
+1. Запустил `make clean; make TARGETS=riscv_isa TRACE=1`,
+    чтобы получить трассировку.
 1. Изменил строку 68: `rv32_isa_tests += MyTest.S` в `sim/tests/riscv_isa/rv32_tests.inc`.
 1. Запустил `make clean; make`, чтобы убедиться, что все тесты проходят успешно.
 
