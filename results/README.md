@@ -37,13 +37,13 @@
         RVTEST_RV32U
 
         RVTEST_CODE_BEGIN
-                la x1, testdata
-                lw      x2, 0(x1)
-                addi    x2, x2, 1
-                la x1, result
-                sw      x2, 0(x1)
-                li      x3, 42
-                bne     x2, x3, fail
+                la      t0, testdata
+                lw      t1, 0(t0)
+                addi    t1, t1, 1
+                la t0, result
+                sw      t1, 0(t0)
+                li      t3, 43
+                bne     t1, t3, fail
                 RVTEST_PASS
         fail:
                 RVTEST_FAIL
@@ -63,4 +63,5 @@
 1. Добавил строку 68: `rv32_isa_tests = MyTest.S` к `sim/tests/riscv_isa/rv32_tests.inc`.
 1. Запустил `make clean; make TARGETS=riscv_isa TRACE=1`, чтобы убедиться, что успешно проходит
     тест `MyTest`.
+1. Заменил `li x3, 42` на `li x3, 43` в `MyTest.S` и убедился, что тест не проходит.
     В дальнейшем этот тест будет заменен на тест синтезируемой команды.
