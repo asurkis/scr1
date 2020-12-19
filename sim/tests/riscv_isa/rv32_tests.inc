@@ -65,4 +65,4 @@ ifneq (,$(findstring c,$(ARCH_lowercase)))
 rv32_isa_tests += isa/rv32uc/rvc.S
 endif ## ifeq (m,$(findstring c,$(ARCH_lowercase)))
 
-rv32_isa_tests = MyTest.S
+rv32_isa_tests += MyTest.S
